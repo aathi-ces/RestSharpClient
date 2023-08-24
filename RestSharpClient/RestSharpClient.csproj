@@ -41,6 +41,7 @@
     <PackageReference Include="RestSharp" Version="110.2.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.7.0" />
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+    <PackageReference Include="System.Runtime.Caching" Version="7.0.0" />
     <PackageReference Include="xunit" Version="2.5.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -51,6 +52,7 @@
     <None Remove="Model\Response\ReqRes\" />
     <None Remove="Model\Response\RestfulBooker\" />
     <None Remove="Helpers\RestfulBooker\" />
+    <None Remove="Utils\" />
   </ItemGroup>
   <ItemGroup>
     <None Update="appsettings.json">
@@ -61,6 +63,7 @@
     <Folder Include="Model\Response\ReqRes\" />
     <Folder Include="Model\Response\RestfulBooker\" />
     <Folder Include="Helpers\RestfulBooker\" />
+    <Folder Include="Utils\" />
   </ItemGroup>
 </Project>
 

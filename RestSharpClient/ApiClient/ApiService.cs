@@ -7,15 +7,22 @@ using System.Net.Mime;
 using RestSharp.Authenticators;
 using RestSharpClient.Model.RestfulBooker;
 using Settings;
+using RestSharpClient.Utils;
+using RestSharp.Serializers;
 
 namespace RestSharpClient.ApiClient
 {
-    public partial class ApiService : IApiService, IDisposable
+    public partial class ApiService : BaseClient, IApiService, IDisposable
     {
         readonly RestClient restClient;
+
         public RestResponse? Response { get; set; }
 
-        public ApiService(Uri baseUrl) {
+        public ApiService(ICacheService cache,
+                          IDeserializer serializer,
+                          IErrorLogger errorLogger,
+                          Uri baseUrl) : base(cache, serializer, errorLogger, baseUrl)
+        {
 
             RestClientOptions restClientOptions = new()
             {
@@ -23,6 +30,16 @@ namespace RestSharpClient.ApiClient
                 Authenticator = new HttpBasicAuthenticator("admin", "password123")
             };
             restClient = new (restClientOptions);
+        }
+
+        public ApiService(Uri baseUrl)
+        {
+            RestClientOptions restClientOptions = new()
+            {
+                BaseUrl = baseUrl,
+                Authenticator = new HttpBasicAuthenticator("admin", "password123")
+            };
+            restClient = new(restClientOptions);
         }
 
         public IApiService PostMethod(object requestObject, string uri, Dictionary<string, string>? headers = null)
@@ -57,6 +74,13 @@ namespace RestSharpClient.ApiClient
             SetRequestElements(request, apiMethodParams);
             Response = Execute(restClient, request, apiMethodParams.Headers);
             return this;
+        }
+
+        public T GetFromBase<T>(ApiMethodParams apiMethodParams)
+        {
+            var request = new RestRequest() { Resource = apiMethodParams.Uri!, Method = Method.Get, RequestFormat = DataFormat.Json };
+            SetRequestElements(request, apiMethodParams);
+            return Get<T>(request);
         }
 
         public IApiService PutMethod(object requestObject, string uri, Dictionary<string, string>? headers = null)
