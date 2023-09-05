@@ -56,10 +56,10 @@ namespace RestSharpClient.Helpers.RestfulBooker
                         queryParams.Add(key, booking.Lastname);
                         break;
                     case "checkin":
-                        queryParams.Add(key, booking.Bookingdates.Checkin.ToString());
+                        queryParams.Add(key, booking.Bookingdates.Checkin.ToString()!);
                         break;
                     case "checkout":
-                        queryParams.Add(key, booking.Bookingdates.Checkout.ToString());
+                        queryParams.Add(key, booking.Bookingdates.Checkout.ToString()!);
                         break;
                 }
             });

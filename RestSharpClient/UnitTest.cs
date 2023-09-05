@@ -9,6 +9,12 @@ using Xunit;
 using System.Net.Mime;
 using Newtonsoft.Json;
 using RestSharpClient.Helpers;
+using System.Runtime.Caching;
+using Microsoft.Extensions.Caching.Memory;
+using MemoryCache = Microsoft.Extensions.Caching.Memory.MemoryCache;
+using RestSharpClient.Utils;
+using RestSharp.Serializers;
+
 
 namespace Microsoft.CodeAnalysis.CSharp.UnitTests
 {
@@ -20,10 +26,18 @@ namespace Microsoft.CodeAnalysis.CSharp.UnitTests
         [Trait("Domain", "ReqRes")]
         public void VerifyGetUsersApiReturns200()
         {
-            client = new ApiService(ConfigurationHelper.BuildConfiguration().ReqRes.BaseUrl);
-            IApiService service = client.GetMethod(ConfigurationHelper.BuildConfiguration().ReqRes.Resources.ListUsers);
-            RestResponse response = service.GetResponse();
-            Users users = service.GetValue<Users>();
+            var cache = new InMemoryCache();
+            var errorLogger = new ErrorLogger();
+            var serializer = new RestSharpClient.Utils.JsonSerializer();
+            client = new ApiService(cache, serializer, errorLogger, ConfigurationHelper.BuildConfiguration().ReqRes.BaseUrl);
+
+            ApiMethodParams apiMethodParams = new()
+            {
+                Uri = ConfigurationHelper.BuildConfiguration().ReqRes.Resources.ListUsers,
+            };
+
+            RestResponse<Users> response = client.GetFromCacheAsyncMethod<Users>(apiMethodParams, "UserList").Result;
+            Users users = JsonConvert.DeserializeObject<Users>(response.Content!)!;
 
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             Assert.Equal(MediaTypeNames.Application.Json, response.ContentType);

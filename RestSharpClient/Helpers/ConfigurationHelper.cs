@@ -8,10 +8,6 @@ namespace Helpers
 {
     public class ConfigurationHelper
     {
-        // public static IConfigurationRoot ConfigurationRoot { get; private set; }
-
-        // public static string BaseUrl => ConfigurationRoot[nameof(BaseUrl)];
-
         public static AppSettings BuildConfiguration()
         {
             var config = new ConfigurationBuilder()

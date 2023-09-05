@@ -9,6 +9,10 @@ using RestSharpClient.Model.RestfulBooker;
 using Settings;
 using RestSharpClient.Utils;
 using RestSharp.Serializers;
+using static System.Runtime.InteropServices.JavaScript.JSType;
+using System.Runtime.CompilerServices;
+using Helpers;
+using JsonSerializer = RestSharpClient.Utils.JsonSerializer;
 
 namespace RestSharpClient.ApiClient
 {
@@ -19,7 +23,7 @@ namespace RestSharpClient.ApiClient
         public RestResponse? Response { get; set; }
 
         public ApiService(ICacheService cache,
-                          IDeserializer serializer,
+                          JsonSerializer serializer,
                           IErrorLogger errorLogger,
                           Uri baseUrl) : base(cache, serializer, errorLogger, baseUrl)
         {
@@ -32,7 +36,7 @@ namespace RestSharpClient.ApiClient
             restClient = new (restClientOptions);
         }
 
-        public ApiService(Uri baseUrl)
+        public ApiService(Uri baseUrl) : base(baseUrl)
         {
             RestClientOptions restClientOptions = new()
             {
@@ -83,6 +87,20 @@ namespace RestSharpClient.ApiClient
             return Get<T>(request);
         }
 
+        public T GetFromCacheMethod<T>(ApiMethodParams apiMethodParams, string cacheKey) where T : class, new()
+        {
+            var request = new RestRequest() { Resource = apiMethodParams.Uri!, Method = Method.Get, RequestFormat = DataFormat.Json };
+            SetRequestElements(request, apiMethodParams);
+            return GetFromCache<T>(request, cacheKey);
+        }
+
+        public Task<RestResponse<T>> GetFromCacheAsyncMethod<T>(ApiMethodParams apiMethodParams, string cacheKey) where T : class, new()
+        {
+            var request = new RestRequest() { Resource = apiMethodParams.Uri!, Method = Method.Get, RequestFormat = DataFormat.Json };
+            SetRequestElements(request, apiMethodParams);
+            return GetFromCacheAsync<T>(request, cacheKey);
+        }
+
         public IApiService PutMethod(object requestObject, string uri, Dictionary<string, string>? headers = null)
         {
             var request = new RestRequest() { Resource = uri, Method = Method.Put, RequestFormat = DataFormat.Json };
@@ -130,6 +148,7 @@ namespace RestSharpClient.ApiClient
 
         private static RestResponse Execute(RestClient client, RestRequest request, object? requestObject = null, Dictionary<string, string>? headers = null)
         {
+            RestResponse? response = null;
             if (headers != null)
             {
                 foreach (var header in headers)
@@ -139,8 +158,41 @@ namespace RestSharpClient.ApiClient
             if (requestObject != null)
                 request.AddJsonBody(requestObject);
 
-            return client.Execute(request);
+
+            try {
+                response = client.Execute(request);
+            } catch (Exception exception) {
+                new ErrorLogger().LogError(exception, "");
+            }
+
+            return response!;
         }
+
+        private static T Execute<T>(RestClient client, RestRequest request, object? requestObject = null, Dictionary<string, string>? headers = null)
+        {
+            RestResponse? response = null;
+            if (headers != null)
+            {
+                foreach (var header in headers)
+                    request.AddHeader(header.Key, header.Value);
+            }
+
+            if (requestObject != null)
+                request.AddJsonBody(requestObject);
+
+
+            try
+            {
+                response = client.Execute(request);
+            }
+            catch (Exception exception)
+            {
+                new ErrorLogger().LogError(exception, "");
+            }
+
+            return new ApiService(ConfigurationHelper.BuildConfiguration().RestfulBooker.BaseUrl).GetValue<T>();
+        }
+
 
         public T GetValue<T>()
         {
