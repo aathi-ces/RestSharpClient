@@ -1,12 +1,8 @@
-﻿using System;
-namespace RestSharpClient.Helpers
+﻿namespace RestSharpClient.Helpers;
+public static class WithExtension
 {
-    public static class WithExtension
+    public static void With<T>(this T o, Action<T> values)
     {
-        public static void With<T>(this T o, Action<T> values)
-        {
-            values.Invoke(o);
-        }
+        values.Invoke(o);
     }
 }
-
